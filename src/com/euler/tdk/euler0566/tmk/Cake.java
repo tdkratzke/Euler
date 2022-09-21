@@ -1,5 +1,7 @@
 package com.euler.tdk.euler0566.tmk;
 
+import java.util.Scanner;
+
 /** Assume range is [0d,1d). */
 public class Cake {
 	final private static double _Eps = 1.0e-10;
@@ -30,13 +32,15 @@ public class Cake {
 			return false;
 		}
 		final boolean currentWraps = nxtStart < crrntStart;
-		if (!currentWraps) {
-			if (start < crrntStart || start > nxtStart) {
-				return false;
-			}
-		} else {
-			if (start < crrntStart || start > nxtStart) {
-				return false;
+		if (_current != nxt) {
+			if (!currentWraps) {
+				if (start < crrntStart || start > nxtStart) {
+					return false;
+				}
+			} else {
+				if (start < crrntStart || start > nxtStart) {
+					return false;
+				}
 			}
 		}
 		final Interval interval = new Interval(start, pink);
@@ -107,6 +111,45 @@ public class Cake {
 	}
 
 	public static void main(final String[] args) {
+		/*
+		 * Because System.in will be closed when we use try with resources as in the
+		 * following, the scanner must be built only once, and the iTest loop must go
+		 * inside the try with resources block.
+		 */
+		final Cake cake = new Cake();
+		try (final Scanner sc = new Scanner(System.in)) {
+			for (int iTest = 0;; ++iTest) {
+				System.out.printf("\n%d. Enter \"Add <start> <pink>\" or Delete (Q = quit)", iTest);
+				final String s = sc.nextLine().toUpperCase();
+				final String[] fields = s.trim().split("[\\s,\\[\\]]+");
+				final int nFields = fields.length;
+				if (nFields == 0) {
+					continue;
+				}
+				final boolean response;
+				if (nFields == 1) {
+					if (s.startsWith("Q")) {
+						break;
+					} else if (s.startsWith("D")) {
+						response = cake.removeCurrent();
+					} else {
+						continue;
+					}
+				} else if (s.startsWith("A")) {
+					try {
+						final double start = Double.parseDouble(fields[1]);
+						final boolean pink = Boolean.parseBoolean(fields[2]);
+						response = cake.insertAfterCurrent(start, pink);
+					} catch (final Exception e) {
+						continue;
+					}
+				} else {
+					continue;
+				}
+				System.out.printf("\nResponse[%b]\n%s\n\n", response, cake.getString());
+			}
+		} catch (final Exception e) {
+		}
 		final double x = convertTo01(-2d + 1.0e-10);
 		final double y = (2d - 1.0e-10) % 1d;
 		final int z = 0;
