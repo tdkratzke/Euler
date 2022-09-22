@@ -6,7 +6,7 @@ import java.util.Scanner;
 public class Cake {
 	final private static double _Eps = 1.0e-10;
 	final private static double _HalfEps = 0.5d * _Eps;
-	final private static double _Big = 1d - _HalfEps;
+	final private static double _OneMinusHalfEps = 1d - _HalfEps;
 	private Interval _current;
 
 	public Cake() {
@@ -17,7 +17,7 @@ public class Cake {
 		start = convertTo01(start);
 		if (_current == null) {
 			final Interval interval = new Interval(0d, pink);
-			interval._pvs = interval._nxt = _current = interval;
+			_current = interval._pvs = interval._nxt = interval;
 			return true;
 		}
 		final double crrntStart = _current._start;
@@ -31,14 +31,14 @@ public class Cake {
 			nxt._pink = pink;
 			return false;
 		}
-		final boolean currentWraps = nxtStart < crrntStart;
 		if (_current != nxt) {
+			final boolean currentWraps = nxtStart < crrntStart;
 			if (!currentWraps) {
 				if (start < crrntStart || start > nxtStart) {
 					return false;
 				}
 			} else {
-				if (start < crrntStart || start > nxtStart) {
+				if (start < crrntStart && start > nxtStart) {
 					return false;
 				}
 			}
@@ -49,6 +49,22 @@ public class Cake {
 		interval._nxt = nxt;
 		_current = interval;
 		return true;
+	}
+
+	public boolean forward() {
+		if (_current != null) {
+			_current = _current._nxt;
+			return true;
+		}
+		return false;
+	}
+
+	public boolean back() {
+		if (_current != null) {
+			_current = _current._pvs;
+			return true;
+		}
+		return false;
 	}
 
 	public boolean removeCurrent() {
@@ -75,17 +91,17 @@ public class Cake {
 		} else {
 			dd = 1d - (-d % 1d);
 		}
-		return dd >= _Big ? 0d : dd;
+		return dd >= _OneMinusHalfEps ? 0d : dd;
 	}
 
 	private static boolean isSameAs(final double d, final double dd) {
 		if (Math.abs(d - dd) <= _HalfEps) {
 			return true;
 		}
-		if (d >= _Big && dd <= _HalfEps) {
+		if (d >= _OneMinusHalfEps && dd <= _HalfEps) {
 			return true;
 		}
-		if (dd >= _Big && d <= _HalfEps) {
+		if (dd >= _OneMinusHalfEps && d <= _HalfEps) {
 			return true;
 		}
 		return false;
@@ -96,12 +112,13 @@ public class Cake {
 			return "No Intervals";
 		}
 		String s = "";
-		for (Interval i = _current;; i = i._nxt) {
-			s += String.format("\n\t%s", i.getString());
-			i = i._nxt;
-			if (i == _current) {
+		int k = 0;
+		for (Interval interval = _current;; interval = interval._nxt) {
+			if (k > 0 && interval == _current) {
 				return s;
 			}
+			s += String.format("%s  %d. %s", //
+					k == 0 ? "" : "\n", k++, interval.getString());
 		}
 	}
 
@@ -117,41 +134,48 @@ public class Cake {
 		 * inside the try with resources block.
 		 */
 		final Cake cake = new Cake();
+		cake.insertAfterCurrent(0d, true);
+		cake.insertAfterCurrent(0.5, false);
 		try (final Scanner sc = new Scanner(System.in)) {
 			for (int iTest = 0;; ++iTest) {
-				System.out.printf("\n%d. Enter \"Add <start> <pink>\" or Delete (Q = quit)", iTest);
+				if (iTest > 0) {
+					System.out.println();
+				}
+				System.out.printf("%d. Enter \"Add <start> <pink>\", " + //
+						"FO(rward), B(ack), D(elete), or \"Flip <start> <end>\". (Q = quit): ", //
+						iTest);
 				final String s = sc.nextLine().toUpperCase();
-				final String[] fields = s.trim().split("[\\s,\\[\\]]+");
-				final int nFields = fields.length;
-				if (nFields == 0) {
-					continue;
+				if (s.startsWith("Q")) {
+					break;
 				}
 				final boolean response;
-				if (nFields == 1) {
-					if (s.startsWith("Q")) {
-						break;
-					} else if (s.startsWith("D")) {
-						response = cake.removeCurrent();
-					} else {
-						continue;
-					}
-				} else if (s.startsWith("A")) {
-					try {
-						final double start = Double.parseDouble(fields[1]);
-						final boolean pink = Boolean.parseBoolean(fields[2]);
-						response = cake.insertAfterCurrent(start, pink);
-					} catch (final Exception e) {
-						continue;
-					}
+				if (s.startsWith("D")) {
+					response = cake.removeCurrent();
+				} else if (s.startsWith("FO")) {
+					response = cake.forward();
+				} else if (s.startsWith("B")) {
+					response = cake.back();
 				} else {
-					continue;
+					final String[] fields = s.trim().split("[\\s,\\[\\]]+");
+					final int nFields = fields.length;
+					if (nFields < 3) {
+						response = false;
+					} else if (s.startsWith("A")) {
+						boolean responseX = false;
+						try {
+							final double start = Double.parseDouble(fields[1]);
+							final boolean pink = Boolean.parseBoolean(fields[2]);
+							responseX = cake.insertAfterCurrent(start, pink);
+						} catch (final Exception e) {
+						}
+						response = responseX;
+					} else {
+						response = false;
+					}
 				}
-				System.out.printf("\nResponse[%b]\n%s\n\n", response, cake.getString());
+				System.out.printf("Response[%b]\n%s\n", response, cake.getString());
 			}
 		} catch (final Exception e) {
 		}
-		final double x = convertTo01(-2d + 1.0e-10);
-		final double y = (2d - 1.0e-10) % 1d;
-		final int z = 0;
 	}
 }
