@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="70996afb-b3c7-4d18-9730-4e63723cc4bf" name="Changes" comment="Initial Commit">
-      <change afterPath="$PROJECT_DIR$/src/com/euler/tdk/euler0009/euler0009.java" afterDir="false" />
+    <list default="true" id="70996afb-b3c7-4d18-9730-4e63723cc4bf" name="Changes" comment="0009">
+      <change afterPath="$PROJECT_DIR$/src/com/euler/tdk/euler0112/Euler0112.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -37,13 +37,26 @@
     "last_opened_file_path": "C:/Users/Thal/IdeaProjects/Euler"
   }
 }]]></component>
-  <component name="RunManager" selected="Application.euler0009">
+  <component name="RunManager" selected="Application.Euler0112">
     <configuration name="Euler0007" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.euler.tdk.euler0007.Euler0007" />
       <module name="Euler" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="com.euler.tdk.euler0007.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Euler0112" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.euler.tdk.euler0112.Euler0112" />
+      <module name="Euler" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.euler.tdk.euler0112.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -79,6 +92,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.Euler0112" />
         <item itemvalue="Application.euler0009" />
         <item itemvalue="Application.Euler0781" />
         <item itemvalue="Application.Euler0007" />
@@ -101,7 +115,14 @@
       <option name="project" value="LOCAL" />
       <updated>1663703496611</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="0009">
+      <created>1663789673818</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1663789673819</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -117,6 +138,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Initial Commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="Initial Commit" />
+    <MESSAGE value="0009" />
+    <option name="LAST_COMMIT_MESSAGE" value="0009" />
   </component>
 </project>
