@@ -19,7 +19,7 @@ public class Cake {
 			_pvs = _nxt = null;
 		}
 
-		public boolean isInCell(final double d) {
+		public boolean contains(final double d) {
 			final double nxtStart = _nxt._start;
 			if (_start < nxtStart) {
 				return _start <= d && d < nxtStart;
@@ -29,7 +29,7 @@ public class Cake {
 
 		/** Returns the Cell that starts at start. */
 		private Cell splitAt(final double start) {
-			if (!isInCell(start)) {
+			if (!contains(start)) {
 				return null;
 			}
 			if (areWithinEps(_start, start)) {
@@ -78,29 +78,29 @@ public class Cake {
 		return pvs;
 	}
 
-	/**
-	 * Start looking for start at cell. Then flip from start to end, and return the
-	 * cell that starts at end.
-	 */
-	static Cell flip(final Cell cell, final double start, final double end) {
-		final ArrayList<Cell> toFlip = new ArrayList<>();
+	static ArrayList<Cell> gatherCellsOfStretch(final Cell cell, final double start, final double end) {
+		final ArrayList<Cell> cells = new ArrayList<>();
 		for (Cell c = cell;; c = c._nxt) {
-			if (c.isInCell(start)) {
-				toFlip.add(c.splitAt(start));
+			if (c.contains(start)) {
+				cells.add(c.splitAt(start));
 				break;
 			}
 		}
-		for (Cell c = toFlip.get(0);; c = c._nxt) {
+		for (Cell c = cells.get(0);; c = c._nxt) {
 			if (areWithinEps(c._start, end)) {
 				break;
 			}
-			toFlip.add(c);
-			if (c.isInCell(end)) {
+			cells.add(c);
+			if (c.contains(end)) {
 				c.splitAt(end);
 				break;
 			}
 		}
+		return cells;
+	}
 
+	static Cell flipStretch(final Cell cell, final double start, final double end) {
+		final ArrayList<Cell> toFlip = gatherCellsOfStretch(cell, start, end);
 		final int nToFlip = toFlip.size();
 		final double[] lengths = new double[nToFlip];
 		final boolean[] pinks = new boolean[nToFlip];
@@ -119,6 +119,38 @@ public class Cake {
 			}
 		}
 		return toFlip.get(nToFlip - 1)._nxt;
+	}
+
+	static Cell colorStretch(final Cell cell, final double start, final double end, final boolean pink) {
+		final ArrayList<Cell> toColor = gatherCellsOfStretch(cell, start, end);
+		final int nToColor = toColor.size();
+		for (int k = 0; k < nToColor; ++k) {
+			toColor.get(k)._pink = pink;
+		}
+		return toColor.get(nToColor - 1)._nxt;
+	}
+
+	void consolidate() {
+		final double start = _current._start;
+		boolean movedOn = false;
+		for (Cell c = _current;;) {
+			final Cell pvs = c._pvs;
+			if (pvs == c) {
+				_current = c;
+				_current._start = 0d;
+				return;
+			}
+			if (pvs._pink == c._pink) {
+				pvs._nxt = c._nxt;
+				c._nxt._pvs = pvs;
+			} else {
+				movedOn = true;
+			}
+			if (movedOn && pvs.contains(start)) {
+				break;
+			}
+			c = pvs;
+		}
 	}
 
 	private boolean forward() {
