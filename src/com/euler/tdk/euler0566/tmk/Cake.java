@@ -249,6 +249,7 @@ public class Cake {
 				if (iTest > 0) {
 					System.out.println();
 				}
+				//Another comment from tdk
 				/** Convenient to have boolean response.xxx */
 				boolean response = false;
 				switch (iTest) {
