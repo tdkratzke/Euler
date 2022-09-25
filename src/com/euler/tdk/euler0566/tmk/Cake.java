@@ -43,8 +43,19 @@ public class Cake {
 			return newC;
 		}
 
+		public double computeLength() {
+			if (_nxt == this) {
+				return 1d;
+			}
+			final double nxtStart = _nxt._start;
+			if (nxtStart >= _start) {
+				return nxtStart - _start;
+			}
+			return (1d - _start) + nxtStart;
+		}
+
 		public String getString() {
-			return String.format("%.3f,%s", _start, _pink ? "PINK" : "GRAY");
+			return String.format("start[%.3f] length[%.3f],%s", _start, computeLength(), _pink ? "PINK" : "GRAY");
 		}
 
 		@Override
@@ -99,6 +110,10 @@ public class Cake {
 		return cells;
 	}
 
+	Cell flipStretch(final double start, final double end) {
+		return flipStretch(_current, start, end);
+	}
+
 	static Cell flipStretch(final Cell cell, final double start, final double end) {
 		final ArrayList<Cell> toFlip = gatherCellsOfStretch(cell, start, end);
 		final int nToFlip = toFlip.size();
@@ -119,6 +134,10 @@ public class Cake {
 			}
 		}
 		return toFlip.get(nToFlip - 1)._nxt;
+	}
+
+	Cell colorStretch(final double start, final double end, final boolean pink) {
+		return colorStretch(_current, start, end, pink);
 	}
 
 	static Cell colorStretch(final Cell cell, final double start, final double end, final boolean pink) {
@@ -226,7 +245,7 @@ public class Cake {
 	public static void main(final String[] args) {
 		final Cake cake = new Cake();
 		try (final Scanner sc = new Scanner(System.in)) {
-			for (int iTest = 0;; ++iTest) {
+			ITEST_LOOP: for (int iTest = 0;; ++iTest) {
 				if (iTest > 0) {
 					System.out.println();
 				}
@@ -242,34 +261,48 @@ public class Cake {
 					response = cake.splitCurrentAt(0.5);
 					break;
 				default:
-					System.out.printf("%d. Enter \"SP(lit) <start>\", " + //
-							"FO(rward), B(ack), D(elete), or \"FL(ip) <end>\". (Q = quit): ", //
+					System.out.printf("%d. Enter Q(uit), " + //
+							"FO(rward), B(ack), M(erge to pvs)," + //
+							" \"S(plit at) <d>\"," + //
+							" \"FL(ip) <start> <end>\", or" + //
+							" \"C(olor) <start> <end> <Pink or Gray>\": ", //
 							iTest);
 					final String s = sc.nextLine().toUpperCase();
 					if (s.startsWith("Q")) {
-						break;
-					}
-					if (s.startsWith("D")) {
-						response = cake.mergeCurrentToPvs();
+						break ITEST_LOOP;
 					} else if (s.startsWith("FO")) {
 						response = cake.forward();
 					} else if (s.startsWith("B")) {
 						response = cake.back();
+					} else if (s.startsWith("M")) {
+						response = cake.mergeCurrentToPvs();
 					} else {
 						final String[] fields = s.trim().split("[\\s,\\[\\]]+");
 						final int nFields = fields.length;
 						if (nFields < 2) {
 							response = false;
-						} else if (s.startsWith("S")) {
-							boolean responseX = false;
-							try {
-								final double start = convertTo01(Double.parseDouble(fields[1]));
-								responseX = cake.splitCurrentAt(start);
-							} catch (final Exception e) {
-							}
-							response = responseX;
 						} else {
-							response = false;
+							final double start = convertTo01(Double.parseDouble(fields[1]));
+							if (s.startsWith("S")) {
+								boolean responseX = false;
+								try {
+									responseX = cake.splitCurrentAt(start);
+								} catch (final Exception e) {
+								}
+								response = responseX;
+							} else if (nFields < 3) {
+								response = false;
+							} else {
+								final double end = convertTo01(Double.parseDouble(fields[2]));
+								if (s.startsWith("FL")) {
+									response = cake.flipStretch(start, end) != null;
+								} else if (nFields < 4) {
+									response = false;
+								} else {
+									final boolean pink = fields[3].toUpperCase().startsWith("P");
+									response = cake.colorStretch(start, end, pink) != null;
+								}
+							}
 						}
 					}
 				}
