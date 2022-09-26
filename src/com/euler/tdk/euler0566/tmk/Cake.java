@@ -6,7 +6,7 @@ import java.util.Scanner;
 /** Assume range is [0d,1d). */
 public class Cake {
 	final private static double _Eps = 1.0e-10;
-	final private static double _OneMinusHalfEps = 1d - _Eps / 2d;
+	final private static double _OneMinusEps = 1d - _Eps;
 
 	public class Cell {
 		double _start;
@@ -55,7 +55,9 @@ public class Cake {
 		}
 
 		public String getString() {
-			return String.format("start[%.3f] length[%.3f],%s", _start, computeLength(), _pink ? "PINK" : "GRAY");
+			final double nxtStart = this == _nxt ? (_start + 1d) : _nxt._start;
+			return String.format("[%.3f:%.3f(%.3f)],%s", //
+					_start, nxtStart, computeLength(), _pink ? "PINK" : "GRAY");
 		}
 
 		@Override
@@ -71,51 +73,27 @@ public class Cake {
 		_current._nxt = _current._pvs = _current;
 	}
 
-	/** Merges c with c._pvs if they're the same color. */
-	private static Cell mergeCellToPvs(final Cell c) {
-		final Cell pvs = c._pvs;
-		if (pvs == c) {
-			return c;
-		}
-		if (pvs._pink != c._pink) {
-			return null;
-		}
-		final Cell nxt = c._nxt;
-		pvs._nxt = nxt;
-		nxt._pvs = pvs;
-		if (pvs._nxt == pvs) {
-			pvs._start = 0d;
-		}
-		return pvs;
-	}
-
-	static ArrayList<Cell> gatherCellsOfStretch(final Cell cell, final double start, final double end) {
-		final ArrayList<Cell> cells = new ArrayList<>();
-		for (Cell c = cell;; c = c._nxt) {
+	Cell flip(final double start, final double end) {
+		Cell startC = null;
+		for (Cell c = _current;; c = c._nxt) {
 			if (c.contains(start)) {
-				cells.add(c.splitAt(start));
+				startC = c.splitAt(start);
 				break;
 			}
 		}
-		for (Cell c = cells.get(0);; c = c._nxt) {
-			if (areWithinEps(c._start, end)) {
-				break;
-			}
-			cells.add(c);
-			if (c.contains(end)) {
-				c.splitAt(end);
-				break;
+		final ArrayList<Cell> toFlip = new ArrayList<>();
+		if (startC.contains(end)) {
+			toFlip.add(startC.splitAt(end)._pvs);
+		} else {
+			toFlip.add(startC);
+			for (Cell c = startC;; c = c._nxt) {
+				if (c.contains(end)) {
+					toFlip.add(c.splitAt(end)._pvs);
+					break;
+				}
+				toFlip.add(c);
 			}
 		}
-		return cells;
-	}
-
-	Cell flipStretch(final double start, final double end) {
-		return flipStretch(_current, start, end);
-	}
-
-	static Cell flipStretch(final Cell cell, final double start, final double end) {
-		final ArrayList<Cell> toFlip = gatherCellsOfStretch(cell, start, end);
 		final int nToFlip = toFlip.size();
 		final double[] lengths = new double[nToFlip];
 		final boolean[] pinks = new boolean[nToFlip];
@@ -128,76 +106,67 @@ public class Cake {
 		for (int k = 0; k < nToFlip; ++k) {
 			final int kX = nToFlip - 1 - k;
 			final Cell c = toFlip.get(k);
-			c._pink = toFlip.get(kX)._pink;
+			c._pink = !pinks[kX];
 			if (k < nToFlip - 1) {
 				toFlip.get(k + 1)._start = convertTo01(c._start + lengths[kX]);
 			}
 		}
-		return toFlip.get(nToFlip - 1)._nxt;
+		final Cell nxt = toFlip.get(nToFlip - 1)._nxt;
+		return nxt;
 	}
 
-	Cell colorStretch(final double start, final double end, final boolean pink) {
-		return colorStretch(_current, start, end, pink);
-	}
-
-	static Cell colorStretch(final Cell cell, final double start, final double end, final boolean pink) {
-		final ArrayList<Cell> toColor = gatherCellsOfStretch(cell, start, end);
-		final int nToColor = toColor.size();
-		for (int k = 0; k < nToColor; ++k) {
-			toColor.get(k)._pink = pink;
-		}
-		return toColor.get(nToColor - 1)._nxt;
-	}
-
-	void consolidate() {
-		final double start = _current._start;
-		boolean movedOn = false;
-		for (Cell c = _current;;) {
-			final Cell pvs = c._pvs;
-			if (pvs == c) {
-				_current = c;
-				_current._start = 0d;
-				return;
-			}
-			if (pvs._pink == c._pink) {
-				pvs._nxt = c._nxt;
-				c._nxt._pvs = pvs;
-			} else {
-				movedOn = true;
-			}
-			if (movedOn && pvs.contains(start)) {
+	void setColor(final double start, final double end, final boolean pink) {
+		Cell startC = null;
+		for (startC = _current;; startC = startC._nxt) {
+			if (startC.contains(start)) {
 				break;
 			}
-			c = pvs;
 		}
-	}
-
-	private boolean forward() {
-		_current = _current._nxt;
-		return true;
-	}
-
-	private boolean back() {
-		_current = _current._pvs;
-		return true;
-	}
-
-	private boolean splitCurrentAt(final double start) {
-		final Cell c = _current.splitAt(start);
-		if (c == null) {
-			return false;
+		Cell pvsC = null;
+		if (startC._pink != pink) {
+			startC = startC.splitAt(start);
+			pvsC = startC._pvs;
+		} else {
+			for (pvsC = startC._pvs;; pvsC = pvsC._pvs) {
+				if (pvsC._pink != pink) {
+					break;
+				}
+				if (pvsC == startC) {
+					_current._pvs = _current._nxt = _current;
+					_current._start = 0d;
+					return;
+				}
+			}
 		}
-		_current = c;
-		return true;
-	}
-
-	private boolean mergeCurrentToPvs() {
-		final Cell c = mergeCellToPvs(_current);
-		if (c == null) {
-			return false;
+		Cell nxtC = null;
+		for (nxtC = startC;; nxtC = nxtC._nxt) {
+			if (nxtC.contains(end)) {
+				break;
+			}
 		}
-		_current = c;
-		return true;
+		if (nxtC._pink != pink) {
+			nxtC = nxtC.splitAt(end);
+		} else {
+			for (;; nxtC = nxtC._nxt) {
+				if (nxtC._pink != pink) {
+					break;
+				}
+				if (nxtC == startC) {
+					_current._pvs = _current._nxt = _current;
+					_current._start = 0d;
+					return;
+				}
+			}
+		}
+		final Cell pinkC = pvsC._nxt;
+		pinkC._pink = pink;
+		pinkC._nxt = nxtC;
+		nxtC._pvs = pinkC;
+		if (nxtC._nxt == pvsC && nxtC._pink == pvsC._pink) {
+			pvsC._nxt._pvs = nxtC;
+			nxtC._nxt = pvsC._nxt;
+		}
+		_current = nxtC;
 	}
 
 	private static double convertTo01(final double d) {
@@ -207,7 +176,7 @@ public class Cake {
 		} else {
 			dd = 1d - (-d % 1d);
 		}
-		return dd >= _OneMinusHalfEps ? 0d : dd;
+		return dd >= _OneMinusEps ? 0d : dd;
 	}
 
 	private static boolean areWithinEps(double d0, double d1) {
@@ -242,72 +211,66 @@ public class Cake {
 		return getString();
 	}
 
+	@SuppressWarnings("unused")
 	public static void main(final String[] args) {
+		final String[] cannedStrings01 = {
+				"ZZ", //
+				"C 0.25 0.75 Gray", //
+				"C 0.8 0.2 Gray", //
+				"C 0.25 0.8 G", //
+				"C 0.5 0.8 PINK" //
+		};
+		final String[] cannedStrings = {
+				"ZZ", //
+				"F 0.2 0.8", //
+				"F 0.4 0.6", //
+		};
+		final int nCanned = cannedStrings.length;
 		final Cake cake = new Cake();
 		try (final Scanner sc = new Scanner(System.in)) {
-			ITEST_LOOP: for (int iTest = 0;; ++iTest) {
+			for (int iTest = 0;; ++iTest) {
 				if (iTest > 0) {
 					System.out.println();
 				}
-				/** Convenient to have boolean response.xxx */
-				boolean response = false;
-				switch (iTest) {
-				case 0:
-					response = true;
-					break;
-				case 1:
-					response = cake.splitCurrentAt(0d);
-					break;
-				case 2:
-					response = cake.splitCurrentAt(0.5);
-					break;
-				default:
+				final String s;
+				if (iTest < nCanned) {
+					s = cannedStrings[iTest];
+				} else {
 					System.out.printf("%d. Enter Q(uit), " + //
-							"FO(rward), B(ack), M(erge to pvs)," + //
 							" \"S(plit at) <d>\"," + //
-							" \"FL(ip) <start> <end>\", or" + //
+							" \"F(lip) <start> <end>\", or" + //
 							" \"C(olor) <start> <end> <Pink or Gray>\": ", //
 							iTest);
-					final String s = sc.nextLine().toUpperCase();
-					if (s.startsWith("Q")) {
-						break ITEST_LOOP;
-					} else if (s.startsWith("FO")) {
-						response = cake.forward();
-					} else if (s.startsWith("B")) {
-						response = cake.back();
-					} else if (s.startsWith("M")) {
-						response = cake.mergeCurrentToPvs();
+					s = sc.nextLine().toUpperCase();
+				}
+				if (s.startsWith("Q")) {
+					break;
+				} else if (s.startsWith("Z")) {
+				} else {
+					final String[] fields = s.trim().split("[\\s,\\[\\]]+");
+					final int nFields = fields.length;
+					if (nFields < 2) {
 					} else {
-						final String[] fields = s.trim().split("[\\s,\\[\\]]+");
-						final int nFields = fields.length;
-						if (nFields < 2) {
-							response = false;
+						final double start = convertTo01(Double.parseDouble(fields[1]));
+						if (s.startsWith("S")) {
+							try {
+								cake._current.splitAt(start);
+							} catch (final Exception e) {
+							}
+						} else if (nFields < 3) {
 						} else {
-							final double start = convertTo01(Double.parseDouble(fields[1]));
-							if (s.startsWith("S")) {
-								boolean responseX = false;
-								try {
-									responseX = cake.splitCurrentAt(start);
-								} catch (final Exception e) {
-								}
-								response = responseX;
-							} else if (nFields < 3) {
-								response = false;
+							final double end = convertTo01(Double.parseDouble(fields[2]));
+							if (s.startsWith("F")) {
+								cake.flip(start, end);
+							} else if (nFields < 4) {
 							} else {
-								final double end = convertTo01(Double.parseDouble(fields[2]));
-								if (s.startsWith("FL")) {
-									response = cake.flipStretch(start, end) != null;
-								} else if (nFields < 4) {
-									response = false;
-								} else {
-									final boolean pink = fields[3].toUpperCase().startsWith("P");
-									response = cake.colorStretch(start, end, pink) != null;
-								}
+								final boolean pink = fields[3].toUpperCase().startsWith("P");
+								cake.setColor(start, end, pink);
 							}
 						}
 					}
 				}
-				System.out.printf("Response[%b]\n%s\n", response, cake.getString());
+				System.out.printf("s[%s]\n%s\n", s, cake.getString());
 			}
 		} catch (final Exception e) {
 		}
