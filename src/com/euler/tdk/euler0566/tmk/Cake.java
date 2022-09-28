@@ -5,7 +5,7 @@ import java.util.Scanner;
 
 /** Assume range is [0d,1d). */
 public class Cake {
-	final private static double _Eps = 1.0e-10;
+	final private static double _Eps = 1.0e-7;
 	final private static double _OneMinusEps = 1d - _Eps;
 
 	public class Cell {
@@ -20,7 +20,13 @@ public class Cake {
 		}
 
 		public boolean contains(final double d) {
+			if (areWithinEps(_start, d)) {
+				return true;
+			}
 			final double nxtStart = _nxt._start;
+			if (areWithinEps(nxtStart, d)) {
+				return false;
+			}
 			if (_start < nxtStart) {
 				return _start <= d && d < nxtStart;
 			}
@@ -29,11 +35,11 @@ public class Cake {
 
 		/** Returns the Cell that starts at start. */
 		private Cell splitAt(final double start) {
-			if (!contains(start)) {
-				return null;
-			}
 			if (areWithinEps(_start, start)) {
 				return this;
+			}
+			if (!contains(start)) {
+				return null;
 			}
 			final Cell newC = new Cell(start, _pink);
 			_nxt._pvs = newC;
@@ -73,46 +79,121 @@ public class Cake {
 		_current._nxt = _current._pvs = _current;
 	}
 
-	Cell flip(final double start, final double end) {
-		Cell startC = null;
+	void flip(final double startX, final double endX) {
+		final double start = convertTo01(startX);
+		final double end = convertTo01(endX);
+		if (areWithinEps(start, end)) {
+			if (startX != endX) {
+				for (Cell c = _current;;) {
+					c._pink = !c._pink;
+					c = c._nxt;
+					if (c == _current) {
+						break;
+					}
+				}
+			}
+			return;
+		}
+		final Cell firstC;
 		for (Cell c = _current;; c = c._nxt) {
 			if (c.contains(start)) {
-				startC = c.splitAt(start);
+				firstC = c.splitAt(start);
 				break;
 			}
 		}
-		final ArrayList<Cell> toFlip = new ArrayList<>();
-		if (startC.contains(end)) {
-			toFlip.add(startC.splitAt(end)._pvs);
-		} else {
-			toFlip.add(startC);
-			for (Cell c = startC;; c = c._nxt) {
-				if (c.contains(end)) {
-					toFlip.add(c.splitAt(end)._pvs);
-					break;
-				}
-				toFlip.add(c);
+		final Cell firstNotToFlipC;
+		for (Cell c = firstC;; c = c._nxt) {
+			if (c.contains(end)) {
+				firstNotToFlipC = c.splitAt(end);
+				break;
 			}
 		}
-		final int nToFlip = toFlip.size();
+		final ArrayList<Cell> toFlipList = new ArrayList<>();
+		for (Cell c = firstC; c != firstNotToFlipC; c = c._nxt) {
+			toFlipList.add(c);
+		}
+		final int nToFlip = toFlipList.size();
 		final double[] lengths = new double[nToFlip];
 		final boolean[] pinks = new boolean[nToFlip];
 		for (int k = 0; k < nToFlip; ++k) {
-			final Cell c = toFlip.get(k);
-			lengths[k] = convertTo01(c._nxt._start - c._start);
+			final Cell c = toFlipList.get(k);
+			lengths[k] = c.computeLength();
 			pinks[k] = c._pink;
 		}
 
 		for (int k = 0; k < nToFlip; ++k) {
 			final int kX = nToFlip - 1 - k;
-			final Cell c = toFlip.get(k);
+			final Cell c = toFlipList.get(k);
 			c._pink = !pinks[kX];
 			if (k < nToFlip - 1) {
-				toFlip.get(k + 1)._start = convertTo01(c._start + lengths[kX]);
+				toFlipList.get(k + 1)._start = convertTo01(c._start + lengths[kX]);
 			}
 		}
-		final Cell nxt = toFlip.get(nToFlip - 1)._nxt;
-		return nxt;
+		final Cell pvsC = firstC._pvs;
+		if (pvsC._pink == firstC._pink) {
+			final Cell firstNxtC = firstC._nxt;
+			firstNxtC._pvs = pvsC;
+			pvsC._nxt = firstNxtC;
+		}
+		final Cell lastC = firstNotToFlipC._pvs;
+		if (lastC._pink == firstNotToFlipC._pink) {
+			final Cell nxtC = firstNotToFlipC._nxt;
+			lastC._nxt = nxtC;
+			nxtC._pvs = lastC;
+			_current = lastC;
+		} else {
+			_current = firstNotToFlipC;
+		}
+	}
+
+	boolean isUniColored() {
+		for (Cell c = _current._nxt; c != _current; c = c._nxt) {
+			if (c._pink != _current._pink) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	boolean isWeird() {
+		boolean haveSeenCurrent = false;
+		boolean haveWrapped = false;
+		for (Cell c = _current;; c = c._nxt) {
+			if (c == _current) {
+				if (haveSeenCurrent) {
+					return false;
+				}
+				haveSeenCurrent = true;
+			}
+			if (c._nxt._start < c._start) {
+				if (haveWrapped) {
+					return true;
+				}
+				haveWrapped = true;
+			}
+			final double len = c.computeLength();
+			if (len < 10d * _Eps) {
+				return true;
+			}
+		}
+	}
+
+	int countFlips(final double[] lengths, final int maxNFlips) {
+		final int nLengths = lengths.length;
+		double start = 0d;
+		for (int nFlips = 1;; ++nFlips) {
+			final double length = lengths[nFlips % nLengths];
+			final double end = convertTo01(start + length);
+			flip(start, end);
+			if ((isUniColored() && _current._pink) || //
+					(maxNFlips > 0 && nFlips >= maxNFlips)) {
+				return nFlips;
+			}
+			if (isWeird()) {
+				return -1;
+			}
+			start = end;
+		}
 	}
 
 	void setColor(final double start, final double end, final boolean pink) {
@@ -179,31 +260,40 @@ public class Cake {
 		return dd >= _OneMinusEps ? 0d : dd;
 	}
 
+	static double _minAreDiff = 1d;
+
 	private static boolean areWithinEps(double d0, double d1) {
 		if (d0 > d1) {
 			final double d = d0;
 			d0 = d1;
 			d1 = d;
 		}
-		if (d1 - d0 <= _Eps) {
+		final double delta0 = d1 - d0;
+		if (delta0 <= _Eps) {
 			return true;
 		}
-		if (d0 <= _Eps || d1 >= 1d - _Eps) {
-			return (1d - d1) + d0 <= _Eps;
+		final double delta1 = 1d - d1 + d0;
+		if (delta1 <= _Eps) {
+			return true;
+		}
+		final double delta = Math.min(delta0, delta1);
+		if (delta < _minAreDiff) {
+			System.out.printf("\nminAreDiff:%.12f->%.12f", _minAreDiff, delta);
+			_minAreDiff = delta;
 		}
 		return false;
 	}
 
 	public String getString() {
-		String s = "";
-		int k = 0;
-		for (Cell cell = _current;; cell = cell._nxt) {
-			if (k > 0 && cell == _current) {
-				return s;
-			}
-			s += String.format("%s  %d. %s", //
-					k == 0 ? "" : "\n", k++, cell.getString());
+		final String f = "%s  %d. %s";
+		String s = String.format(f, //
+				"", 0, _current.getString());
+		int k = 1;
+		for (Cell cell = _current._nxt; cell != _current; cell = cell._nxt) {
+			s += String.format(f, //
+					"\n", k++, cell.getString());
 		}
+		return s;
 	}
 
 	@Override
@@ -220,26 +310,35 @@ public class Cake {
 				"C 0.25 0.8 G", //
 				"C 0.5 0.8 PINK" //
 		};
-		final String[] cannedStrings = {
+		final String[] cannedStrings02 = {
 				"ZZ", //
 				"F 0.2 0.8", //
 				"F 0.4 0.6", //
 		};
+		final String[] cannedStrings = {
+				"ZZ", //
+				"", //
+		};
+		cannedStrings[1] = String.format("CYcle with max -1 %.12f %.12f %.12f", //
+				1d / 10d, 1d / 14d, Math.sqrt(1d / 16d));
 		final int nCanned = cannedStrings.length;
 		final Cake cake = new Cake();
 		try (final Scanner sc = new Scanner(System.in)) {
 			for (int iTest = 0;; ++iTest) {
+				int nFlips = -1;
 				if (iTest > 0) {
 					System.out.println();
 				}
 				final String s;
 				if (iTest < nCanned) {
-					s = cannedStrings[iTest];
+					s = cannedStrings[iTest].toUpperCase();
 				} else {
 					System.out.printf("%d. Enter Q(uit), " + //
-							" \"S(plit at) <d>\"," + //
-							" \"F(lip) <start> <end>\", or" + //
-							" \"C(olor) <start> <end> <Pink or Gray>\": ", //
+							" S(plit at) <d>," + //
+							" F(lip) <start> <end>, or" + //
+							" CO(lor) <start> <end> <Pink or Gray>: ", //
+							" CY(cle) <len1> <len2> ...", //
+							" CY(cle with Max) <maxNFlips> <len1> <len2> ...", //
 							iTest);
 					s = sc.nextLine().toUpperCase();
 				}
@@ -249,7 +348,31 @@ public class Cake {
 				} else {
 					final String[] fields = s.trim().split("[\\s,\\[\\]]+");
 					final int nFields = fields.length;
-					if (nFields < 2) {
+					if (s.startsWith("CY")) {
+						final int doublesStartAt, maxNFlips;
+						if (fields[1].equalsIgnoreCase("with")) {
+							doublesStartAt = 4;
+							maxNFlips = Integer.parseInt(fields[3]);
+						} else {
+							doublesStartAt = 1;
+							maxNFlips = -1;
+						}
+						final ArrayList<Double> lengthsList = new ArrayList<Double>();
+						for (int k = doublesStartAt; k < nFields; ++k) {
+							try {
+								final Double d = Double.parseDouble(fields[k]);
+								if (0d < d && d < 1d) {
+									lengthsList.add(d);
+								}
+							} catch (final NumberFormatException e) {
+							}
+						}
+						final int nLengths = lengthsList.size();
+						final double[] lengths = new double[nLengths];
+						for (int k = 0; k < nLengths; ++k) {
+							lengths[k] = lengthsList.get(k);
+						}
+						nFlips = cake.countFlips(lengths, maxNFlips);
 					} else {
 						final double start = convertTo01(Double.parseDouble(fields[1]));
 						if (s.startsWith("S")) {
@@ -257,22 +380,26 @@ public class Cake {
 								cake._current.splitAt(start);
 							} catch (final Exception e) {
 							}
-						} else if (nFields < 3) {
 						} else {
 							final double end = convertTo01(Double.parseDouble(fields[2]));
 							if (s.startsWith("F")) {
 								cake.flip(start, end);
-							} else if (nFields < 4) {
-							} else {
+							} else if (s.startsWith("CO")) {
 								final boolean pink = fields[3].toUpperCase().startsWith("P");
 								cake.setColor(start, end, pink);
 							}
 						}
 					}
 				}
-				System.out.printf("s[%s]\n%s\n", s, cake.getString());
+				if (nFlips > 0) {
+					System.out.printf("s[%s]\n     nFlips[%d]\n%s\n", s, nFlips, cake.getString());
+				} else {
+					System.out.printf("s[%s]\n%s\n", s, cake.getString());
+				}
 			}
-		} catch (final Exception e) {
+		} catch (
+
+		final Exception e) {
 		}
 	}
 
