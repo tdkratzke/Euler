@@ -108,26 +108,23 @@ public class Cake {
 				break;
 			}
 		}
-		final ArrayList<Cell> toFlipList = new ArrayList<>();
-		for (Cell c = firstC; c != firstNotToFlipC; c = c._nxt) {
-			toFlipList.add(c);
-		}
-		final int nToFlip = toFlipList.size();
-		final double[] lengths = new double[nToFlip];
-		final boolean[] pinks = new boolean[nToFlip];
-		for (int k = 0; k < nToFlip; ++k) {
-			final Cell c = toFlipList.get(k);
-			lengths[k] = c.computeLength();
-			pinks[k] = c._pink;
-		}
-
-		for (int k = 0; k < nToFlip; ++k) {
-			final int kX = nToFlip - 1 - k;
-			final Cell c = toFlipList.get(k);
-			c._pink = !pinks[kX];
-			if (k < nToFlip - 1) {
-				toFlipList.get(k + 1)._start = convertTo01(c._start + lengths[kX]);
+		final ArrayList<Double> lengthsList = new ArrayList<>();
+		final ArrayList<Boolean> pinksList = new ArrayList<>();
+		for (Cell c = firstNotToFlipC._pvs;; c = c._pvs) {
+			lengthsList.add(c.computeLength());
+			pinksList.add(c._pink);
+			if (c == firstC) {
+				break;
 			}
+		}
+		final int nToFlip = lengthsList.size();
+		int k = 0;
+		for (Cell c = firstC; c != firstNotToFlipC; c = c._nxt) {
+			c._pink = !pinksList.get(k);
+			if (k < nToFlip - 1) {
+				c._nxt._start = convertTo01(c._start + lengthsList.get(k));
+			}
+			++k;
 		}
 		final Cell pvsC = firstC._pvs;
 		if (pvsC._pink == firstC._pink) {
@@ -278,7 +275,7 @@ public class Cake {
 		}
 		final double delta = Math.min(delta0, delta1);
 		if (delta < _minAreDiff) {
-			System.out.printf("\nminAreDiff:%.12f->%.12f", _minAreDiff, delta);
+			System.out.printf("\nminAreDiff:%.12f->%.12f\n", _minAreDiff, delta);
 			_minAreDiff = delta;
 		}
 		return false;
