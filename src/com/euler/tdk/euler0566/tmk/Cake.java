@@ -9,12 +9,12 @@ public class Cake {
 	private class Cell {
 		private double _start;
 		private boolean _pink;
-		private Cell _pvs, _nxt;
+		private Cell _nxt;
 
 		public Cell(final double start, final boolean pink) {
 			_start = start;
 			_pink = pink;
-			_pvs = _nxt = null;
+			_nxt = null;
 		}
 
 		private double computeLength() {
@@ -44,7 +44,12 @@ public class Cake {
 
 	public Cake() {
 		_current = new Cell(/* start= */0d, /* pink= */true);
-		_current._nxt = _current._pvs = _current;
+		reset();
+	}
+
+	private void reset() {
+		_current._start = 0d;
+		_current._nxt = _current;
 	}
 
 	private Cell getContainingCell(final double d) {
@@ -58,23 +63,20 @@ public class Cake {
 			if (areWithinEps(nxtStart, d)) {
 				return nxt;
 			}
-			if (cStart < nxtStart) {
-				if (d <= cStart || d >= nxtStart) {
-					continue;
-				}
-			} else if (nxtStart <= d && d <= cStart) {
+			if (cStart < nxtStart && (d < cStart || d > nxtStart)) {
+				continue;
+			} else if (nxtStart < cStart && (nxtStart < d && d < cStart)) {
 				continue;
 			}
 			final Cell newC = new Cell(d, c._pink);
-			nxt._pvs = newC;
 			newC._nxt = nxt;
 			c._nxt = newC;
-			newC._pvs = c;
 			return newC;
 		}
 	}
 
 	public int countFlips(final double[] lengths) {
+		reset();
 		final int nLengths = lengths.length;
 		double start = 0d;
 		for (int nFlips = 0;; ++nFlips) {
@@ -106,16 +108,6 @@ public class Cake {
 				}
 				++k;
 			}
-			/** Kill startC if its pink value matches its predecessor's. */
-			if (true) {
-			} else {
-				final Cell pvsC = startC._pvs;
-				if (pvsC._pink == startC._pink) {
-					final Cell firstNxtC = startC._nxt;
-					firstNxtC._pvs = pvsC;
-					pvsC._nxt = firstNxtC;
-				}
-			}
 			/** Check if we're done. */
 			if (_current._pink) {
 				boolean fail = false;
@@ -133,6 +125,29 @@ public class Cake {
 		}
 	}
 
+	public int f(final int a, final int b, final int c) {
+		final double[] lengths = new double[] {
+				1d / a, 1d / b, 1d / Math.sqrt(c)
+		};
+		return countFlips(lengths);
+	}
+
+	public int g(final int n) {
+		int nFlips = 0;
+		for (int a = 9; a <= n - 2; ++a) {
+			for (int b = a + 1; b <= n - 1; ++b) {
+				for (int c = b + 1; c <= n; ++c) {
+					final int nFlips0 = f(a, b, c);
+					nFlips += nFlips0;
+					System.out.printf("\n\t[a,b,c][%d,%d,%d]: [%d/%d]", //
+							a, b, c, nFlips0, nFlips);
+				}
+			}
+		}
+		System.out.println();
+		return nFlips;
+	}
+
 	private static boolean areWithinEps(double d0, double d1) {
 		if (d0 > d1) {
 			final double d = d0;
@@ -143,12 +158,11 @@ public class Cake {
 	}
 
 	public String getString() {
-		final String f = "%s  %d. %s";
-		String s = String.format(f, //
-				"", 0, _current.getString());
+		final String f = "  %d. %s\n";
+		String s = String.format(f, 0, _current.getString());
 		int k = 1;
 		for (Cell c = _current._nxt; c != _current; c = c._nxt) {
-			s += String.format(f, "\n", k++, c.getString());
+			s += String.format(f, k++, c.getString());
 		}
 		return s;
 	}
@@ -162,10 +176,14 @@ public class Cake {
 		final String[] cannedStrings = {
 				"Print", //
 				"", //
+				"", //
+				"", //
 		};
-		cannedStrings[1] = //
+		cannedStrings[1] = String.format("F %d %d %d", 15, 16, 17);
+		cannedStrings[2] = String.format("G %d", 13);
+		cannedStrings[3] = //
 				String.format("Cycle %.12f %.12f %.12f", //
-						1d / 10d, 1d / 14d, Math.sqrt(1d / 16d));
+						1d / 12d, 1d / 13d, Math.sqrt(1d / 14d));
 		final int nCanned = cannedStrings.length;
 		final Cake cake = new Cake();
 		try (final Scanner sc = new Scanner(System.in)) {
@@ -180,36 +198,50 @@ public class Cake {
 				} else {
 					System.out.printf("%d. Enter Q(uit), " + //
 							" P(rint)," + //
-							" CY(cle) <len1> <len2> ...", //
+							" CY(cle) <len1> <len2> ..." + //
+							" F <a> <b> <c>", //
+							" G <n>", //
 							iTest);
 					s = sc.nextLine().toUpperCase();
 				}
+				final long millis = System.currentTimeMillis();
 				if (s.startsWith("Q")) {
 					break;
 				} else if (s.startsWith("P")) {
 				} else {
 					final String[] fields = s.trim().split("[\\s,\\[\\]]+");
 					final int nFields = fields.length;
-					if (s.startsWith("CY")) {
-						final ArrayList<Double> lengthsList = new ArrayList<Double>();
-						for (int k = 1; k < nFields; ++k) {
-							try {
-								lengthsList.add(Double.parseDouble(fields[k]));
-							} catch (final NumberFormatException e) {
+					if (s.startsWith("F")) {
+						final int a = Integer.parseInt(fields[1]);
+						final int b = Integer.parseInt(fields[2]);
+						final int c = Integer.parseInt(fields[3]);
+						nFlips = cake.f(a, b, c);
+					} else if (s.startsWith("G")) {
+						final int n = Integer.parseInt(fields[1]);
+						nFlips = cake.g(n);
+					} else {
+						if (s.startsWith("CY")) {
+							final ArrayList<Double> lengthsList = new ArrayList<Double>();
+							for (int k = 1; k < nFields; ++k) {
+								try {
+									lengthsList.add(Double.parseDouble(fields[k]));
+								} catch (final NumberFormatException e) {
+								}
 							}
+							final int nLengths = lengthsList.size();
+							final double[] lengths = new double[nLengths];
+							for (int k = 0; k < nLengths; ++k) {
+								lengths[k] = lengthsList.get(k);
+							}
+							nFlips = cake.countFlips(lengths);
 						}
-						final int nLengths = lengthsList.size();
-						final double[] lengths = new double[nLengths];
-						for (int k = 0; k < nLengths; ++k) {
-							lengths[k] = lengthsList.get(k);
-						}
-						nFlips = cake.countFlips(lengths);
 					}
 				}
+				final double secs = (System.currentTimeMillis() - millis) * 0.001;
 				if (nFlips < 0) {
-					System.out.printf("%s\n%s\n", s, cake.getString());
+					System.out.printf("%d(%.3f secs): %s\n%s", iTest, secs, s, cake.getString());
 				} else {
-					System.out.printf("%s\n     nFlips[%d]\n%s\n", s, nFlips, cake.getString());
+					System.out.printf("%d(%.3f secs): %s\n     nFlips[%d]", iTest, secs, s, nFlips);
 				}
 			}
 		} catch (final Exception e) {

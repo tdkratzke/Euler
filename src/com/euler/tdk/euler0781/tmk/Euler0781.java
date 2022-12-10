@@ -5,18 +5,15 @@ import java.util.Arrays;
 public class Euler0781 {
 	final static int _Modulo = 1000000007;
 
-	public static long feynmanF(final int n, final int modulo) {
-		int[] alfa = new int[n + 1];
+	public static int feynmanF(final int n, final int modulo) {
+		final int[] alfa = new int[n + 1];
 		Arrays.fill(alfa, 1);
-
 		for (int bravoN = n - 2; bravoN > 0; bravoN -= 2) {
-			final int[] bravo = new int[bravoN + 1];
 			int cum = 0;
 			for (int i = 1; i <= bravoN; ++i) {
-				cum = (cum + alfa[i]) % _Modulo;
-				bravo[i] = (int) ((alfa[i + 2] * (i + 1L) + cum) % _Modulo);
+				cum = (cum + alfa[i]) % modulo;
+				alfa[i] = (int) ((alfa[i + 2] * (i + 1L) + cum) % modulo);
 			}
-			alfa = bravo;
 		}
 		return alfa[2];
 	}
