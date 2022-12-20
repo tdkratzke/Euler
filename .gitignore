@@ -4,17 +4,8 @@ out/
 !**/src/test/**/out/
 
 ### Eclipse ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+target/
 bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
-
 
 ### NetBeans ###
 /nbproject/private/
