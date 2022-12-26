@@ -13,48 +13,50 @@ Find the least number for which the proportion of bouncy numbers is exactly 99%.
 //Takes two numbers, first is number of trials, second is percent to hit.
 
 package com.euler.tdk.euler0112;
-import java.util.*;
+
+import java.util.Scanner;
 
 public class Euler0112 {
-    public static void main(String[] args) {
-        Scanner in = new Scanner(System.in);
-        int test = in.nextInt();
-        for(int a0 = 0; a0 < test; a0++){
-            int percent = in.nextInt();
+	public static void main(final String[] args) {
+		try (Scanner in = new Scanner(System.in)) {
+			final int test = in.nextInt();
+			for (int a0 = 0; a0 < test; a0++) {
+				final int percent = in.nextInt();
 
-            int tries = 101;
-            double bouncyCount = 1;
-            while((bouncyCount/tries)*100 < percent){
-                tries += 1;
-                if(isBouncy(tries)){
-                    bouncyCount += 1;
-                }
-            }
-            System.out.println(tries);
-        }
-    }
+				int tries = 101;
+				double bouncyCount = 1;
+				while ((bouncyCount / tries) * 100 < percent) {
+					tries += 1;
+					if (isBouncy(tries)) {
+						bouncyCount += 1;
+					}
+				}
+				System.out.println(tries);
+			}
+		}
+	}
 
-    public static boolean isBouncy(int num){
+	public static boolean isBouncy(final int num) {
 
-        String number = String.valueOf(num);
-        char[] digits = number.toCharArray();
+		final String number = String.valueOf(num);
+		final char[] digits = number.toCharArray();
 
-        boolean bouncy = false;
-        boolean up = true;
-        boolean down = true;
-        for(int i = 0; i < digits.length - 1; i++) {
-            if(digits[i] < digits[i+1]){
-                down = false;
-            }else if(digits[i] > digits[i+1]){
-                up = false;
-            }
-            if(!down && !up){
-                bouncy = true;
-                break;
-            }
-        }
+		boolean bouncy = false;
+		boolean up = true;
+		boolean down = true;
+		for (int i = 0; i < digits.length - 1; i++) {
+			if (digits[i] < digits[i + 1]) {
+				down = false;
+			} else if (digits[i] > digits[i + 1]) {
+				up = false;
+			}
+			if (!down && !up) {
+				bouncy = true;
+				break;
+			}
+		}
 
-        return bouncy;
-    }
+		return bouncy;
+	}
 }
 //test comment
