@@ -1,11 +1,11 @@
-package com.euler.tdk.euler0781.tmk.obsolete;
+package com.euler.euler0781.tmk.obsolete;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
 
-import com.euler.tdk.util.GetStrings;
+import com.euler.util.GetStrings;
 
 public class FeynmanF1 {
 

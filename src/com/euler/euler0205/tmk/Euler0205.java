@@ -1,4 +1,4 @@
-package com.euler.tdk.euler0205.tmk;
+package com.euler.euler0205.tmk;
 
 public class Euler0205 {
 

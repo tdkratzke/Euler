@@ -1,4 +1,4 @@
-package com.euler.tdk.euler0781.tmk;
+package com.euler.euler0781.tmk;
 
 import java.util.Arrays;
 

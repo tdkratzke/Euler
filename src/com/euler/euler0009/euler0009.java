@@ -1,4 +1,4 @@
-package com.euler.tdk.euler0009;
+package com.euler.euler0009;
 import java.util.*;
 
 public class euler0009 {

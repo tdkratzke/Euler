@@ -40,11 +40,11 @@
 }</component>
   <component name="RunManager" selected="Application.Euler0781">
     <configuration name="Euler0007" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="com.euler.tdk.euler0007.Euler0007" />
+      <option name="MAIN_CLASS_NAME" value="com.euler.euler0007.Euler0007" />
       <module name="Euler" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.euler.tdk.euler0007.*" />
+          <option name="PATTERN" value="com.euler.euler0007.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -53,11 +53,11 @@
       </method>
     </configuration>
     <configuration name="Euler0112" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="com.euler.tdk.euler0112.Euler0112" />
+      <option name="MAIN_CLASS_NAME" value="com.euler.euler0112.Euler0112" />
       <module name="Euler" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.euler.tdk.euler0112.*" />
+          <option name="PATTERN" value="com.euler.euler0112.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -79,11 +79,11 @@
       </method>
     </configuration>
     <configuration name="euler0009" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="com.euler.tdk.euler0009.euler0009" />
+      <option name="MAIN_CLASS_NAME" value="com.euler.euler0009.euler0009" />
       <module name="Euler" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.euler.tdk.euler0009.*" />
+          <option name="PATTERN" value="com.euler.euler0009.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>

@@ -12,7 +12,7 @@ Find the least number for which the proportion of bouncy numbers is exactly 99%.
 
 //Takes two numbers, first is number of trials, second is percent to hit.
 
-package com.euler.tdk.euler0112;
+package com.euler.euler0112;
 
 import java.util.Scanner;
 

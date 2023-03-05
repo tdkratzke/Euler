@@ -1,4 +1,4 @@
-package com.euler.tdk.util;
+package com.euler.util;
 import java.util.Scanner;
 
 /** Test a check-in. */

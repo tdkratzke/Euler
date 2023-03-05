@@ -1,4 +1,4 @@
-package com.euler.tdk.euler0566.tmk;
+package com.euler.euler0566.tmk;
 
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -6,7 +6,7 @@ import java.util.Scanner;
 public class Cake {
 	final private static double _Eps = 1.0e-10;
 
-	private class Cell {
+	private static class Cell {
 		private double _start;
 		private boolean _pink;
 		private Cell _nxt;
@@ -44,7 +44,7 @@ public class Cake {
 
 	public Cake() {
 		_current = new Cell(/* start= */0d, /* pink= */true);
-		reset();
+		_current._nxt = _current;
 	}
 
 	private void reset() {
@@ -55,12 +55,12 @@ public class Cake {
 	private Cell getContainingCell(final double d) {
 		for (Cell c = _current;; c = c._nxt) {
 			final double cStart = c._start;
-			if (areWithinEps(cStart, d)) {
+			if (isWithinEps(cStart, d)) {
 				return c;
 			}
 			final Cell nxt = c._nxt;
 			final double nxtStart = nxt._start;
-			if (areWithinEps(nxtStart, d)) {
+			if (isWithinEps(nxtStart, d)) {
 				return nxt;
 			}
 			if (cStart < nxtStart && (d < cStart || d > nxtStart)) {
@@ -148,13 +148,13 @@ public class Cake {
 		return nFlips;
 	}
 
-	private static boolean areWithinEps(double d0, double d1) {
+	private static boolean isWithinEps(double d0, double d1) {
 		if (d0 > d1) {
 			final double d = d0;
 			d0 = d1;
 			d1 = d;
 		}
-		return d1 - d0 <= _Eps || 1d - d1 + d0 <= _Eps;
+		return (d1 - d0 <= _Eps) || (1d - d1 + d0 <= _Eps);
 	}
 
 	public String getString() {
@@ -219,22 +219,20 @@ public class Cake {
 					} else if (s.startsWith("G")) {
 						final int n = Integer.parseInt(fields[1]);
 						nFlips = cake.g(n);
-					} else {
-						if (s.startsWith("CY")) {
-							final ArrayList<Double> lengthsList = new ArrayList<Double>();
-							for (int k = 1; k < nFields; ++k) {
-								try {
-									lengthsList.add(Double.parseDouble(fields[k]));
-								} catch (final NumberFormatException e) {
-								}
+					} else if (s.startsWith("CY")) {
+						final ArrayList<Double> lengthsList = new ArrayList<Double>();
+						for (int k = 1; k < nFields; ++k) {
+							try {
+								lengthsList.add(Double.parseDouble(fields[k]));
+							} catch (final NumberFormatException e) {
 							}
-							final int nLengths = lengthsList.size();
-							final double[] lengths = new double[nLengths];
-							for (int k = 0; k < nLengths; ++k) {
-								lengths[k] = lengthsList.get(k);
-							}
-							nFlips = cake.countFlips(lengths);
 						}
+						final int nLengths = lengthsList.size();
+						final double[] lengths = new double[nLengths];
+						for (int k = 0; k < nLengths; ++k) {
+							lengths[k] = lengthsList.get(k);
+						}
+						nFlips = cake.countFlips(lengths);
 					}
 				}
 				final double secs = (System.currentTimeMillis() - millis) * 0.001;

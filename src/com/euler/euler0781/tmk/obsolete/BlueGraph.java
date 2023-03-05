@@ -1,4 +1,4 @@
-package com.euler.tdk.euler0781.tmk.obsolete;
+package com.euler.euler0781.tmk.obsolete;
 
 import java.util.ArrayList;
 import java.util.BitSet;

@@ -1,4 +1,4 @@
-package com.euler.tdk.euler0781.tmk.obsolete;
+package com.euler.euler0781.tmk.obsolete;
 
 public class FeynmanF2 extends FeynmanF1 {
 
