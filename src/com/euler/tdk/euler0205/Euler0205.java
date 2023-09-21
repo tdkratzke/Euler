@@ -1,4 +1,4 @@
-package com.euler.euler0205;
+package com.euler.tdk.euler0205;
 
 public class Euler0205 {
 	public static void main(final String[] args) throws InterruptedException {

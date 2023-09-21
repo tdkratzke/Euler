@@ -1,4 +1,4 @@
-package com.euler.euler0205;
+package com.euler.tdk.euler0205;
 
 public class MultiEuler0205 extends Thread{
     int triangles = 0;

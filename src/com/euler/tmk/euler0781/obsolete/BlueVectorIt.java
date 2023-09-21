@@ -1,4 +1,4 @@
-package com.euler.euler0781.tmk.obsolete;
+package com.euler.tmk.euler0781.obsolete;
 
 import java.util.Arrays;
 

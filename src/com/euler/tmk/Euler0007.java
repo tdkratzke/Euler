@@ -1,4 +1,4 @@
-package com.euler.euler0007.tmk;
+package com.euler.tmk;
 
 import java.util.BitSet;
 

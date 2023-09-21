@@ -6,21 +6,31 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class GetStrings {
-	final static DateTimeFormatter _TimeFormatter = DateTimeFormatter.ofPattern("MMM-dd hh:mm:ss");
+	final static DateTimeFormatter _TimeFormatter = DateTimeFormatter
+			.ofPattern("MMM-dd hh:mm:ss");
 
-	public static String getString(final long[] arr) {
+	private static int _MaxWidthForString = 80;
+	public static String getString(final long[] longVector) {
+		final int vecLen = longVector.length;
 		String s = "[";
-		final int n = arr.length;
-		for (int k = 0; k < n; ++k) {
-			s += (k == 0 ? "" : ",") + arr[k];
+		for (int k = 0, sLen = s.length(); k < vecLen; ++k) {
+			final String ss = String.format("%d%c", longVector[k],
+					(k == vecLen - 1 ? ']' : ','));
+			final int ssLen = ss.length();
+			if (sLen + ssLen > _MaxWidthForString) {
+				s += "\n  ";
+				sLen = 2;
+			}
+			s += ss;
+			sLen += ssLen;
 		}
-		s += "]";
 		return s;
 	}
 
 	public static String getStringFromMillis(final long millis) {
 		final Instant instant = Instant.ofEpochMilli(millis);
-		final ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
+		final ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(instant,
+				ZoneId.systemDefault());
 		return zonedDateTime.format(_TimeFormatter);
 	}
 

@@ -1,4 +1,4 @@
-package com.euler.euler0566.tmk;
+package com.euler.tmk.euler0566;
 
 import java.util.ArrayList;
 import java.util.Scanner;
