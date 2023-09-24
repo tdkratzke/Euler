@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 
 public class GetStrings {
 	final static DateTimeFormatter _TimeFormatter = DateTimeFormatter
@@ -25,6 +26,14 @@ public class GetStrings {
 			sLen += ssLen;
 		}
 		return s;
+	}
+
+	public static String getString(final int[] intVector) {
+		return getString(intsToLongs(intVector));
+	}
+
+	public static long[] intsToLongs(final int[] intVector) {
+		return Arrays.stream(intVector).mapToLong(i -> i).toArray();
 	}
 
 	public static String getStringFromMillis(final long millis) {
